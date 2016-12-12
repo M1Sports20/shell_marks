@@ -1,0 +1,30 @@
+_completemarks() {
+	local curw=${COMP_WORDS[COMP_CWORD]}
+	local wordlist=$(find $MARKSPATH/marks -type l -printf "%f\n")
+	COMPREPLY=($(compgen -W '${wordlist[@]}' -- "$curw"))
+	return 0
+}
+complete -F _completemarks unmark readmark
+
+_completemarks_jump() {
+	local cur=${COMP_WORDS[COMP_CWORD]}    # Current completion being typed
+	local IFS=$'\n' i j k
+
+	# loop on its contents
+	for i in $MARKSPATH/marks; do
+		# create an array of matched subdirs
+		k="${#COMPREPLY[@]}"
+		for j in $( compgen -d $i/$cur ); do
+			COMPREPLY[k++]=${j#$i/}
+		done
+	done
+
+	if [[ ${#COMPREPLY[@]} -eq 1 ]]; then
+		i=${COMPREPLY[0]}
+		if [[ "$i" == "$cur" && $i != "*/" ]]; then
+			COMPREPLY[0]="${i}/"
+		fi
+	fi
+	return 0
+}
+complete -F _completemarks_jump -o nospace jump jumpd

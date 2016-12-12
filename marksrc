@@ -1,0 +1,46 @@
+#!/bin/sh
+
+# marks storage location.  This can be overrideen in your shell rc file
+export MARKSPATH=${MARKSPATH:-"$HOME/.marks"}
+
+# Jumps to a mark.
+# Usage: jump <mark name>
+jump() {
+	cd -P "$MARKSPATH/marks/$1" 2>/dev/null || echo "No such mark: $1"
+}
+
+# Jumps to a mark and pushes current dir on stack.  Similar to pushd
+# Usage: jumpd <mark name>
+jumpd() {
+	pushd `readlink "$MARKSPATH/marks/$1"` &>/dev/null || echo "No such mark: $1"
+}
+
+# Reads a marks location. This allows a mark to be used as an argument.  For
+# example, ls $(readmark wd) where wd is a valid mark
+# Usage: readmark <mark name>
+readmark() {
+	readlink -qn "$MARKSPATH/marks/$1" || echo "No such mark: $1" 
+}
+
+# Mark a current directory as a mark. mark name is optional and when not
+# specified the current directory name is used as the mark name.
+# Usage: mark [mark name]
+mark() {
+	mkdir -p "$MARKSPATH/marks"; ln -s "$(pwd)" "$MARKSPATH/marks/$1"
+}
+# Removes a mark
+# Usage: unmark  <mark name>
+function unmark {
+	rm -f "$MARKSPATH/marks/$1"
+}
+
+# Lists all marks
+# Usage: marks
+function marks {
+	ls --time-style="+SEP" -l "$MARKSPATH/marks" | sed -En 's/.*SEP (.*)/\1/p' | column -t && echo
+}
+
+# Enable auto completions
+if test -n "$BASH_VERSION"; then
+	source $MARKSPATH/bash_completion
+fi
