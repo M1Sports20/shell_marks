@@ -1,0 +1,19 @@
+# TODO: Add next directory after mark if tab a second time.
+
+_completemarks() {
+	if [[ $(ls "${MARKSPATH}/marks" | wc -l) -gt 1 ]]; then
+		reply=($(ls $MARKSPATH/marks/**/*(-) | grep : | sed -E 's/(.*)\/([_a-zA-Z0-9\.\-]*):$/\2/g'))
+	else
+		if readlink -e "${MARKSPATH}/marks"/* &>/dev/null; then
+			reply=($(ls "${MARKSPATH}/marks"))
+		fi
+	fi
+}
+compctl -K _completemarks jump unmark readmark
+
+_mark_expansion() {
+	setopt extendedglob
+	autoload -U modify-current-argument
+	modify-current-argument '$(readlink "$MARKSPATH/marks/$ARG")'
+}
+zle -N _mark_expansion
